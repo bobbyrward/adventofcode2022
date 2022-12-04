@@ -35,6 +35,24 @@ impl TryFrom<char> for TypePriority {
     }
 }
 
+impl From<TypePriority> for u8 {
+    fn from(tp: TypePriority) -> Self {
+        tp.0
+    }
+}
+
+impl From<TypePriority> for u16 {
+    fn from(tp: TypePriority) -> Self {
+        tp.0 as Self
+    }
+}
+
+impl From<TypePriority> for u32 {
+    fn from(tp: TypePriority) -> Self {
+        tp.0 as Self
+    }
+}
+
 #[derive(Debug, Default, Clone, PartialEq)]
 struct Rucksack {
     first_half: HashSet<char>,
@@ -95,8 +113,8 @@ fn part_one() -> Result<String> {
         .map(TypePriority::try_from)
         .collect::<Result<Vec<_>>>()?
         .into_iter()
-        .map(|tp| tp.0 as u32)
-        .sum();
+        .map(u32::from)
+        .sum::<u32>();
 
     Ok(format!("{}", sum))
 }
@@ -116,14 +134,10 @@ fn find_badges(input: &str) -> Result<Vec<char>> {
                         Some(x)
                     }
                 })
-                .map(|hs| {
-                    if hs.len() != 1 {
-                        Err(anyhow!("Could not find badge"))
-                    } else {
-                        Ok(hs.into_iter().next().unwrap())
-                    }
-                })
                 .unwrap()
+                .into_iter()
+                .exactly_one()
+                .map_err(anyhow::Error::from)
         })
         .collect::<Result<Vec<_>>>()
 }
@@ -134,7 +148,7 @@ fn part_two() -> Result<String> {
         .map(TypePriority::try_from)
         .collect::<Result<Vec<_>>>()?
         .into_iter()
-        .map(|tp| tp.0 as u32)
+        .map(u32::from)
         .sum::<u32>()
         .to_string())
 }
