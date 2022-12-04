@@ -23,12 +23,14 @@ impl Command for Args {
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 struct TypePriority(u8);
 
-impl From<char> for TypePriority {
-    fn from(c: char) -> Self {
+impl TryFrom<char> for TypePriority {
+    type Error = anyhow::Error;
+
+    fn try_from(c: char) -> Result<Self, Self::Error> {
         match c {
-            'a'..='z' => Self(c as u8 - b'a' + 1),
-            'A'..='Z' => Self(c as u8 - b'A' + 27),
-            _ => panic!("ahhh!"),
+            'a'..='z' => Ok(Self(c as u8 - b'a' + 1)),
+            'A'..='Z' => Ok(Self(c as u8 - b'A' + 27)),
+            _ => Err(anyhow!("Invalid item type value")),
         }
     }
 }
@@ -90,7 +92,9 @@ fn part_one() -> Result<String> {
         .map(|rs| rs.common_type())
         .collect::<Result<Vec<_>>>()?
         .into_iter()
-        .map(TypePriority::from)
+        .map(TypePriority::try_from)
+        .collect::<Result<Vec<_>>>()?
+        .into_iter()
         .map(|tp| tp.0 as u32)
         .sum();
 
@@ -127,7 +131,9 @@ fn find_badges(input: &str) -> Result<Vec<char>> {
 fn part_two() -> Result<String> {
     Ok(find_badges(input(crate::Day::day03))?
         .into_iter()
-        .map(TypePriority::from)
+        .map(TypePriority::try_from)
+        .collect::<Result<Vec<_>>>()?
+        .into_iter()
         .map(|tp| tp.0 as u32)
         .sum::<u32>()
         .to_string())
@@ -155,8 +161,8 @@ CrZsJsPPZsGzwwsLwLmpwMDw";
             .collect::<Result<Vec<_>>>()?;
         let common_priorities = common
             .iter()
-            .map(|c| TypePriority::from(*c))
-            .collect::<Vec<_>>();
+            .map(|c| TypePriority::try_from(*c))
+            .collect::<Result<Vec<_>>>()?;
 
         println!("Parsed {:?}", parsed);
         println!("Common {:?}", common);
@@ -193,8 +199,8 @@ CrZsJsPPZsGzwwsLwLmpwMDw";
         assert_eq!(
             badges
                 .into_iter()
-                .map(TypePriority::from)
-                .collect::<Vec<_>>(),
+                .map(TypePriority::try_from)
+                .collect::<Result<Vec<_>>>()?,
             vec![TypePriority(18), TypePriority(52)]
         );
         Ok(())
